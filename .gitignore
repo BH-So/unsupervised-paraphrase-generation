@@ -1,0 +1,8 @@
+__pycache__/
+model/
+runs/
+logs/
+results/
+
+*.pyc
+
