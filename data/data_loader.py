@@ -2,7 +2,8 @@ import numpy as np
 import torch
 from torch.utils.data.dataset import Dataset
 
-class HuggingfaceDataset(Dataset):
+
+class QQPDataset(Dataset):
     def __init__(self, tokenizer, filename, max_length=256, device='cuda', is_toy=False):
         self.max_length = max_length
         encodings = self.load_dataset(tokenizer, filename, is_toy)
@@ -13,7 +14,6 @@ class HuggingfaceDataset(Dataset):
         sep_token_id = tokenizer.encode(tokenizer.sep_token)[0]
         self.labels = self.compute_labels(
             self.input_ids, self.attention_mask, sep_token_id)#.to(device)
-        print(self.input_ids.shape, self.attention_mask.shape, self.labels.shape)
 
     def __len__(self):
         return len(self.input_ids)
@@ -24,16 +24,22 @@ class HuggingfaceDataset(Dataset):
         input_ids = self.input_ids[idx, :].to(self.device)
         attention_mask = self.attention_mask[idx, :].to(self.device)
         labels = self.labels[idx, :].to(self.device)
-        return input_ids, attention_mask, labels
+        samples = {
+            'input_ids': input_ids,
+            'attention_mask': attention_mask,
+            'labels': labels,
+        }
+        return samples
 
     def load_dataset(self, tokenizer, filename, is_toy=False):
         with open(filename) as f:
             lines = [l.strip() for l in f]
         if is_toy:
-            lines = lines[:128]
-        encodings = tokenizer(lines, return_tensors='pt', truncation=True,
+            lines = lines[:64]
+        tokens = [tokenizer.encode(line) + [tokenizer.eos_token_id] for line in lines]
+        sentences = [tokenizer.decode(x) for x in tokens]
+        encodings = tokenizer(sentences, return_tensors='pt', truncation=True,
                               padding='max_length', max_length=self.max_length)
-                              #padding=True)
         return encodings
 
     def compute_labels(self, input_ids, attention_mask, sep_token_id):
@@ -43,3 +49,4 @@ class HuggingfaceDataset(Dataset):
         labels[torch.arange(labels.size(1)) <= torch.tensor(positions).unsqueeze(1)] = -100
         labels[attention_mask == 0] = -100
         return labels
+

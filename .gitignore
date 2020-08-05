@@ -1,5 +1,5 @@
 __pycache__/
-model/
+checkpoints/
 runs/
 logs/
 results/
