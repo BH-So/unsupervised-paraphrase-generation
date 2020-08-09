@@ -35,12 +35,13 @@ def train(args):
     gpt_model.build_model()
 
     train_dataset = QQPDataset(gpt_model.tokenizer, args.train_data_path,
+                               max_length=args.max_length,
                                device=device, is_toy=args.toy)
     dev_dataset = QQPDataset(gpt_model.tokenizer, args.dev_data_path,
+                             max_length=args.max_length,
                              device=device, is_toy=args.toy)
 
     gpt_model.build_optimizer(dataset_size=len(train_dataset))
-    # start_datetime = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
 
     eos_tok = gpt_model.tokenizer.eos_token
     sep_tok = gpt_model.tokenizer.sep_token
@@ -64,8 +65,8 @@ def train(args):
             samples = train_dataset[indices[begin_loc:end_loc]]
             _ = gpt_model.train(samples)
 
-            #if step % 20000 == 0 or step == last_step:
-            if (step % 20000 == 0 or step == last_step) and ep % 200 == 0:
+            if step % 20000 == 0 or step == last_step:
+            #        and (args.toy is False or ep % 200 == 0):
                 if step < last_step:
                     logging.info("{} step of {} epoch".format(step, ep))
                     checkpoint = 'ep{}_{}k_steps/'.format(ep, step // 1000)
@@ -88,7 +89,6 @@ def train(args):
                 for inp, gen in zip(dev_samples, generated_texts):
                     print("  Input: {}".format(inp))
                     print("  Gen: {}".format(gen))
-    #tb_writer.close()
 
 
 if __name__ == '__main__':
@@ -113,6 +113,8 @@ if __name__ == '__main__':
 
     parser.add_argument('--model', type=str, default='gpt2-medium',
                         help='pretrained model name (only gpt available)')
+    parser.add_argument('--max_length', type=int, default=256,
+                        help='Maximum number of tokens for each sequence')
     parser.add_argument('--batch_size', type=int, default=4,
                         help='Training batch size')
     parser.add_argument('--eval_batch_size', type=int, default=4,
@@ -138,7 +140,6 @@ if __name__ == '__main__':
         log_file = log_file.replace('{datetime}', args.tag + '_{datetime}')
     logging.basicConfig(level=log_level, format=log_format,
                         filename=log_file.format(datetime=start_datetime))
-    # logging.getLogger("UnsupervisedParaphraseGeneration_TRAIN")
     logging.getLogger().setLevel(log_level)
 
     ### Reproducibility
