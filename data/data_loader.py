@@ -5,16 +5,20 @@ from torch.utils.data.dataset import Dataset
 
 class QQPDataset(Dataset):
     def __init__(self, tokenizer, filename,
-                 max_length=256, device='cuda', is_toy=False):
+                 max_length=256, device='cuda',
+                 inference=False, is_toy=False):
         self.max_length = max_length
+        self.device = device
+        self.inference = bool(inference)
+
         encodings = self.load_dataset(tokenizer, filename, is_toy)
         self.input_ids = encodings['input_ids']
         self.attention_mask = encodings['attention_mask']
-        self.device = device
 
         sep_token_id = tokenizer.encode(tokenizer.sep_token)[0]
-        self.labels = self.compute_labels(
-            self.input_ids, self.attention_mask, sep_token_id)
+        if self.inference is False:
+            self.labels = self.compute_labels(
+                    self.input_ids, self.attention_mask, sep_token_id)
 
     def __len__(self):
         return len(self.input_ids)
@@ -23,13 +27,13 @@ class QQPDataset(Dataset):
         if torch.is_tensor(idx):
             idx = idx.tolist()
         input_ids = self.input_ids[idx, :].to(self.device)
-        attention_mask = self.attention_mask[idx, :].to(self.device)
-        labels = self.labels[idx, :].to(self.device)
         samples = {
             'input_ids': input_ids,
-            'attention_mask': attention_mask,
-            'labels': labels,
         }
+        if self.inference is False:
+            samples['attention_mask'] = \
+                    self.attention_mask[idx, :].to(self.device)
+            samples['labels'] = self.labels[idx, :].to(self.device)
         return samples
 
     def load_dataset(self, tokenizer, filename, is_toy=False):

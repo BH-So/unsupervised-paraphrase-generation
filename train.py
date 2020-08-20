@@ -16,15 +16,6 @@ start_datetime = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
 
 
 def train(args):
-    if args.save_dir is None:
-        save_dir = args.model
-        save_dir += '_toy' if args.toy else ''
-        save_dir += '_{}'.format(args.tag) if args.tag else ''
-        save_dir += '_continued' if args.checkpoint is not None else ''
-        save_dir += '_{}'.format(start_datetime)
-        args.save_dir = './checkpoints/{}/'.format(save_dir)
-    if args.summary_dir is None:
-        args.summary_dir = args.save_dir.replace('checkpoints', 'runs')
     device = args.device
     batch_size = args.batch_size
 
@@ -43,7 +34,6 @@ def train(args):
 
     gpt_model.build_optimizer(dataset_size=len(train_dataset))
 
-    eos_tok = gpt_model.tokenizer.eos_token
     sep_tok = gpt_model.tokenizer.sep_token
     dev_samples = [gpt_model.tokenizer.decode(ids).split(sep_tok)[0]
                    for ids in dev_dataset[:5]['input_ids']]
@@ -79,13 +69,13 @@ def train(args):
                 print("Dev ppl: {}".format(ppl))
                 print("Sample generation on train data")
                 generated_texts = gpt_model.generate_text(
-                        train_samples, suffix=sep_tok, eos=eos_tok)
+                        train_samples, suffix=sep_tok)
                 for inp, gen in zip(train_samples, generated_texts):
                     print("  Input: {}".format(inp))
                     print("  Gen: {}".format(gen))
                 print("Sample generation on dev data")
                 generated_texts = gpt_model.generate_text(
-                        dev_samples, suffix=sep_tok, eos=eos_tok)
+                        dev_samples, suffix=sep_tok)
                 for inp, gen in zip(dev_samples, generated_texts):
                     print("  Input: {}".format(inp))
                     print("  Gen: {}".format(gen))
@@ -132,6 +122,17 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int, default=1234)
     parser.add_argument('--toy', action='store_true')
     args = parser.parse_args()
+
+    if args.save_dir is None:
+        save_dir = args.model
+        save_dir += '_toy' if args.toy else ''
+        save_dir += '_{}'.format(args.tag) if args.tag else ''
+        save_dir += '_continued' if args.checkpoint is not None else ''
+        save_dir += '_{}'.format(start_datetime)
+        args.save_dir = './checkpoints/{}/'.format(save_dir)
+
+    if args.summary_dir is None:
+        args.summary_dir = args.save_dir.replace('checkpoints', 'runs')
 
     log_format = '%(asctime)s [%(levelname)s] %(message)s'
     log_level = logging.DEBUG if args.debug else logging.INFO

@@ -37,7 +37,8 @@ class FinetuneGPT2(object):
 
     def build_optimizer(self, dataset_size=None):
         lr = self.args.learning_rate
-        self.optimizer = AdamW(self.model.parameters(), lr=lr)
+        self.optimizer = AdamW(self.model.parameters(), lr=lr,
+                               weight_decay=0.01)
 
         if dataset_size is None:
             dataset_size = 400000
@@ -121,7 +122,7 @@ class FinetuneGPT2(object):
         if checkpoint_dir is None:
             checkpoint_dir = self.args.checkpoint
         self.tokenizer = GPT2Tokenizer.from_pretrained(checkpoint_dir)
-        self.model = GPT2LMHeadModel.from_pretrained(checkpoint_dir)
+        self.model = GPT2LMHeadModel.from_pretrained(checkpoint_dir).to(self.device)
         logging.info("Load model from {}".format(checkpoint_dir))
 
     def save_model(self, save_dir=None):
