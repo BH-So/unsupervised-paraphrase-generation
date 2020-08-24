@@ -6,3 +6,5 @@ results/
 
 *.pyc
 
+data/QQP*
+data/WikiSQL/

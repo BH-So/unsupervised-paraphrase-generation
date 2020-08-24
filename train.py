@@ -103,7 +103,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--model', type=str, default='gpt2-medium',
                         help='pretrained model name (only gpt available)')
-    parser.add_argument('--max_length', type=int, default=256,
+    parser.add_argument('--max_length', type=int, default=1024,
                         help='Maximum number of tokens for each sequence')
     parser.add_argument('--batch_size', type=int, default=4,
                         help='Training batch size')

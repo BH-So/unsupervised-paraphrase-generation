@@ -12,8 +12,8 @@ p="1.0"
 SEED="1234"
 
 #for T in ${temperature_list[@]}; do
-INPUT_FILE="./data/QQP_split/test_input.txt"
-PREPROCESSED="./data/QQP_split/test_input_preprocessed.txt"
+INPUT_FILE="./data/QQP_split/ver2/test_input.txt"
+PREPROCESSED="./data/QQP_split/ver2/test_input_preprocessed.txt"
 FILENAME="inferenced_top-${k}-p${p//./_}-T${T//./_}_seed${SEED}.txt"
 
 # Skip preprocessing of "./data/QQP_split/test_input.txt" <- It has to be run once
@@ -28,7 +28,6 @@ CUDA_VISIBLE_DEVICES=$GPU_ID python inference.py \
     --p ${p} \
     --temperature ${T} \
     --num_generate 10 \
-    --not-preprocessed \
     --seed ${SEED}
 
 CUDA_VISIBLE_DEVICES=$GPU_ID python postprocessing.py \

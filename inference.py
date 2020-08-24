@@ -28,16 +28,14 @@ def inference(args):
         sentences,
         max_length=args.max_length,
         decoding=args.decoding,
-        preprocessed=(not args.not_preprocessed),
-        suffix='[SEP]' if args.not_preprocessed else ''
+        suffix=''  # '[SEP]'
     )
     logging.info("DONE INFERENCE")
     logging.info("Save to {}".format(args.save))
     os.makedirs(os.path.dirname(args.save), exist_ok=True)
     with open(args.save, 'w') as f:
-        for idx, sequences in enumerate(seq_list):
-            for seq in sequences:
-                f.write('{}\t{}\n'.format(idx, seq))
+        for idx, sequence in enumerate(seq_list):
+            f.write('{}\t{}\n'.format(idx, sequence))
 
 
 if __name__ == '__main__':
@@ -53,11 +51,10 @@ if __name__ == '__main__':
     parser.add_argument('--log', type=str, default=None,
                         help='Log filename')
 
-    parser.add_argument('--max_length', type=int, default=256,
+    parser.add_argument('--max_length', type=int, default=1024,
                         help='Maximum number of tokens for each sequence')
-    parser.add_argument('--not-preprocessed', action="store_true")
 
-    parser.add_argument('--decoding', type=str, default='greedy',
+    parser.add_argument('--decoding', type=str, default='sampling',
                         help='{beam, greedy, sampling}')
     parser.add_argument('--beam_size', type=int, default=8,
                         help='Beam size for beam search decoding')
