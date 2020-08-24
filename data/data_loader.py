@@ -1,24 +1,23 @@
-import numpy as np
+import csv
+
+# import numpy as np
 import torch
 from torch.utils.data.dataset import Dataset
 
 
 class QQPDataset(Dataset):
     def __init__(self, tokenizer, filename,
-                 max_length=256, device='cuda',
+                 max_length=512, device='cuda',
                  inference=False, is_toy=False):
+        self.tokenizer = tokenizer
+        self.filename = filename
         self.max_length = max_length
         self.device = device
         self.inference = bool(inference)
+        self.is_toy = is_toy
 
-        encodings = self.load_dataset(tokenizer, filename, is_toy)
-        self.input_ids = encodings['input_ids']
-        self.attention_mask = encodings['attention_mask']
-
-        sep_token_id = tokenizer.encode(tokenizer.sep_token)[0]
-        if self.inference is False:
-            self.labels = self.compute_labels(
-                    self.input_ids, self.attention_mask, sep_token_id)
+        self.epoch = 0
+        self.load_dataset()
 
     def __len__(self):
         return len(self.input_ids)
@@ -36,24 +35,46 @@ class QQPDataset(Dataset):
             samples['labels'] = self.labels[idx, :].to(self.device)
         return samples
 
-    def load_dataset(self, tokenizer, filename, is_toy=False):
-        with open(filename) as f:
-            lines = [line.strip() for line in f]
-        if is_toy:
-            # lines = lines[:64]
-            lines = lines[:1]
-        tokens = [tokenizer.encode(line) + [tokenizer.eos_token_id]
-                  for line in lines]
-        sentences = [tokenizer.decode(x) for x in tokens]
-        encodings = tokenizer(sentences, return_tensors='pt', truncation=True,
-                              padding='max_length', max_length=self.max_length)
-        return encodings
+    def load_dataset(self, epoch=None):
+        filename = self.filename
+        if epoch is not None:
+            filename += '.{}'.format(epoch-1)
 
-    def compute_labels(self, input_ids, attention_mask, sep_token_id):
-        labels = input_ids.clone()
-        sep_token_exist, sep_tok_positions = np.where(labels == sep_token_id)
-        assert(len(sep_token_exist) == len(labels))
-        sep_tok_positions = torch.tensor(sep_tok_positions).unsqueeze(1)
-        labels[torch.arange(labels.size(1)) <= sep_tok_positions] = -100
-        labels[attention_mask == 0] = -100
-        return labels
+        data = []
+        with open(filename) as f:
+            reader = csv.reader(f)
+            for corrupted, sentence in reader:
+                data.append([corrupted, sentence])
+                if self.is_toy is True:
+                    break
+
+        tokens_list, labels_list = [], []
+        for corrupted, sentence in data:
+            tokens, labels = self.formatting(corrupted, sentence)
+            tokens_list.append(tokens)
+            labels_list.append(labels)
+        sentences = [self.tokenizer.decode(tokens)
+                     for tokens in tokens_list]
+        encodings = self.tokenizer(
+            sentences, return_tensors='pt', truncation=True,
+            padding='max_length', max_length=self.max_length)
+
+        self.input_ids = encodings['input_ids']
+        self.attention_mask = encodings['attention_mask']
+
+        if self.inference is False:
+            self.labels = torch.tensor(labels_list, dtype=torch.long)
+
+    def formatting(self, input_text, target_text):
+        input_tokens = self.tokenizer.encode(input_text)
+        target_tokens = self.tokenizer.encode(target_text)
+
+        tokens = [self.tokenizer.bos_token_id] + input_tokens \
+            + [self.tokenizer.sep_token_id] + target_tokens \
+            + [self.tokenizer.eos_token_id]
+
+        labels = [-100] * (len(input_tokens) + 2) \
+            + target_tokens + [self.tokenizer.eos_token_id] \
+            + [-100] * (self.max_length - len(tokens))
+        labels = labels[:self.max_length]
+        return tokens, labels

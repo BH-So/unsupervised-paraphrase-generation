@@ -16,5 +16,5 @@ python preprocessing.py --input ${input file} --output ${output file}
 
 ### Code citation
 
-Copy `ead.py` from [here] (https://github.com/jasonwei20/eda_nlp/)
+We are referring to [here] (https://github.com/jasonwei20/eda_nlp/) for `synonym_replacement` function
 

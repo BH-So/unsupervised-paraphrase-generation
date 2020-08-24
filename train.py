@@ -46,6 +46,7 @@ def train(args):
         last_step += 1
 
     for ep in range(1, args.num_epochs+1):
+        train_dataset.load_dataset(epoch=ep)
         step = 0
         indices = list(range(len(train_dataset)))
         random.shuffle(indices)

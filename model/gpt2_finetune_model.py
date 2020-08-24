@@ -7,7 +7,6 @@ import torch
 from torch.utils.tensorboard import SummaryWriter
 from transformers import GPT2Tokenizer, GPT2LMHeadModel
 from transformers import AdamW
-# from transformers import Trainer, TrainingArguments
 from transformers import get_linear_schedule_with_warmup
 
 
@@ -57,8 +56,8 @@ class FinetuneGPT2(object):
 
     def train(self, samples):
         self.model.train()
+        logging.debug(samples)
         outputs = self.model(**samples)
-        # loss, logits, past = outputs
         loss = outputs[0]
         loss.backward()
         self.optimizer.step()
@@ -89,12 +88,9 @@ class FinetuneGPT2(object):
         self.writer.add_scalar('Loss/dev_ppl', ppl, self.global_step)
         return ppl
 
-    def generate_text(self, input_texts, max_length=1024, decoding='sampling',
-                      eos=None, suffix='', pre_tokenize=False):
+    def generate_text(self, input_texts, max_length=1024, decoding='greedy',
+                      suffix=''):
         self.model.eval()
-        if eos is None:
-            eos = self.tokenizer.eos_token
-        eos_token_ids = self.tokenizer.encode(eos)
         sequences = []
         with torch.no_grad():
             kwargs = {'max_length': max_length}
@@ -105,14 +101,13 @@ class FinetuneGPT2(object):
                 kwargs['temperature'] = self.args.temperature
                 kwargs['num_return_sequences'] = self.args.num_generate
             for input_text in input_texts:
+                input_text = input_text + suffix
                 logging.info('Start to generate from "{}"'.format(input_text))
-                if pre_tokenize is True:
-                    input_encoding = input_text
-                else:
-                    input_encoding = self.tokenizer.encode(
-                            input_text + suffix, return_tensors='pt')
+                input_encoding = self.tokenizer.encode(
+                    input_text, return_tensors='pt')
                 input_encoding = input_encoding.to(self.device)
-                generated_tokens = self.model.generate(input_encoding, **kwargs)
+                generated_tokens = self.model.generate(
+                    input_encoding, **kwargs)
                 sequence = self.tokenizer.decode(generated_tokens[0])
                 logging.info("Generated text: {}".format(sequence))
                 sequences.append(sequence)
