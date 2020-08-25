@@ -91,7 +91,7 @@ class FinetuneGPT2(object):
     def generate_text(self, input_texts, max_length=1024, decoding='greedy',
                       suffix=''):
         self.model.eval()
-        sequences = []
+        sentences_list = []
         with torch.no_grad():
             kwargs = {'max_length': max_length}
             if decoding == 'sampling':
@@ -101,6 +101,7 @@ class FinetuneGPT2(object):
                 kwargs['temperature'] = self.args.temperature
                 kwargs['num_return_sequences'] = self.args.num_generate
             for input_text in input_texts:
+                sequences = []
                 input_text = input_text + suffix
                 logging.info('Start to generate from "{}"'.format(input_text))
                 input_encoding = self.tokenizer.encode(
@@ -108,10 +109,12 @@ class FinetuneGPT2(object):
                 input_encoding = input_encoding.to(self.device)
                 generated_tokens = self.model.generate(
                     input_encoding, **kwargs)
-                sequence = self.tokenizer.decode(generated_tokens[0])
-                logging.info("Generated text: {}".format(sequence))
-                sequences.append(sequence)
-        return sequences
+                for tok_seq in generated_tokens:
+                    sequence = self.tokenizer.decode(tok_seq)
+                    logging.info("Generated text: {}".format(sequence))
+                    sequences.append(sequence)
+                sentences_list.append(sequences)
+        return sentences_list
 
     def load_saved_model(self, checkpoint_dir=None):
         if checkpoint_dir is None:

@@ -45,31 +45,34 @@ def evaluate(args):
         f.write("Generated sentences file: {}\n".format(args.generated))
         if args.ground_truth is not None:
             f.write("Ground truth file: {}\n".format(args.ground_truth))
-        for metric in metrics:
-            logging.debug("START EVALUATION: {}".format(metric))
 
-            cnt = len(sentences)
-            if metric == 'meteor':
-                # Calculate METEOR score for each paraphrases
-                meteor_scores = defaultdict(list)
-                for idx, candidates in sentences.items():
-                    gt = gt_sentences[idx]
-                    for cand in candidates:
-                        score = meteor(gt, cand)
-                        meteor_scores[idx].append((score, cand))
-                logging.debug("Example METEOR scores: {}".format(meteor_scores[0]))
+        cnt = len(sentences)
+        if 'meteor' in metrics:
+            logging.debug("START EVALUATION: METEOR")
 
-                # Get the best METEOR score for each input
-                for key in meteor_scores.keys():
-                    meteor_scores[key].sort(key=lambda row: -row[0])
-                best_score = sum([score_list[0][0] for score_list in meteor_scores.values()]) / cnt
-                logging.info("Best METEOR:  {}".format(best_score))
+            # Calculate METEOR score for each paraphrases
+            meteor_scores = defaultdict(list)
+            for idx, candidates in sentences.items():
+                gt = gt_sentences[idx]
+                for cand in candidates:
+                    score = meteor(gt, cand)
+                    meteor_scores[idx].append((score, cand))
+            logging.debug("Example METEOR scores: {}".format(meteor_scores[0]))
 
-                # Get top 3 METEOR scores for each input
-                top3_score = sum([sum([score for score, _ in row[:3]]) / len(row[:3])
-                                  for row in meteor_scores.values()]) / cnt
-                logging.debug("Example top 3 METEOR scores: {}".format(meteor_scores[0][:3]))
-                logging.info("Top 3 METEOR: {}".format(top3_score))
+            # Get the best METEOR score for each input
+            for key in meteor_scores.keys():
+                meteor_scores[key].sort(key=lambda row: -row[0])
+            best_score = sum([score_list[0][0] for score_list in meteor_scores.values()]) / cnt
+            logging.info("Best METEOR:  {}".format(best_score))
+
+            # Get top 3 METEOR scores for each input
+            top3_score = sum([sum([score for score, _ in row[:3]]) / len(row[:3])
+                              for row in meteor_scores.values()]) / cnt
+            logging.debug("Example top 3 METEOR scores: {}".format(meteor_scores[0][:3]))
+            logging.info("Top 3 METEOR: {}".format(top3_score))
+
+            if 'self-bleu' in metrics:
+                logging.debug("START EVALUATION: Self-BLEU")
 
                 # Self-BLEU among top 3 paraphrases
                 sbleu = 0
@@ -80,43 +83,43 @@ def evaluate(args):
                     score_list = calculator.get_score()['4gram']
                     sbleu += sum(score_list) / len(score_list)
                 logging.info("self-BLEU among top 3: {}".format(sbleu / cnt))
-            elif metric == 'rouge':
-                # Calculate ROUGE score for each paraphrases
-                rouge1_scores = defaultdict(list)
-                rouge2_scores = defaultdict(list)
-                rouge = rouge_scorer.RougeScorer(['rouge1', 'rouge2'], use_stemmer=True)
-                for idx, candidates in sentences.items():
-                    gt = gt_sentences[idx]
-                    for cand in candidates:
-                        scores = rouge.score(gt, cand)
-                        rouge1_scores[idx].append((scores['rouge1'].fmeasure, cand))
-                        rouge2_scores[idx].append((scores['rouge2'].fmeasure, cand))
-                logging.debug("Example ROUGE-1 scores: {}".format(rouge1_scores[0]))
-                logging.debug("Example ROUGE-2 scores: {}".format(rouge2_scores[0]))
 
-                # Get the best ROUGE score for each input
-                for key in rouge1_scores.keys():
-                    rouge1_scores[key].sort(key=lambda row: -row[0])
-                for key in rouge2_scores.keys():
-                    rouge2_scores[key].sort(key=lambda row: -row[0])
-                best_rouge1 = sum([score_list[0][0] for score_list in rouge1_scores.values()]) / cnt
-                best_rouge2 = sum([score_list[0][0] for score_list in rouge2_scores.values()]) / cnt
-                logging.info("Best ROUGE-1: {}".format(best_rouge1))
-                logging.info("Best ROUGE-2: {}".format(best_rouge2))
+        if 'rouge' in metrics:
+            logging.debug("START EVALUATION: ROUGE")
 
-                # Get top 3 ROUGE scores for each input
-                top3_rouge1 = sum([sum([score for score, _ in row[:3]]) / len(row[:3])
-                                  for row in rouge1_scores.values()]) / cnt
-                top3_rouge2 = sum([sum([score for score, _ in row[:3]]) / len(row[:3])
-                                  for row in rouge2_scores.values()]) / cnt
-                logging.debug("Example top 3 ROUGE-1 scores: {}".format(rouge1_scores[0][:3]))
-                logging.debug("Example top 3 ROUGE-2 scores: {}".format(rouge2_scores[0][:3]))
-                logging.info("Top 3 ROUGE-1: {}".format(top3_rouge1))
-                logging.info("Top 3 ROUGE-2: {}".format(top3_rouge2))
-            else:
-                logging.warning("Not available: {}".format(metric))
-                continue
-            logging.debug("DONE EVALUATION: {}".format(metric))
+            # Calculate ROUGE score for each paraphrases
+            rouge1_scores = defaultdict(list)
+            rouge2_scores = defaultdict(list)
+            rouge = rouge_scorer.RougeScorer(['rouge1', 'rouge2'], use_stemmer=True)
+            for idx, candidates in sentences.items():
+                gt = gt_sentences[idx]
+                for cand in candidates:
+                    scores = rouge.score(gt, cand)
+                    rouge1_scores[idx].append((scores['rouge1'].fmeasure, cand))
+                    rouge2_scores[idx].append((scores['rouge2'].fmeasure, cand))
+            logging.debug("Example ROUGE-1 scores: {}".format(rouge1_scores[0]))
+            logging.debug("Example ROUGE-2 scores: {}".format(rouge2_scores[0]))
+
+            # Get the best ROUGE score for each input
+            for key in rouge1_scores.keys():
+                rouge1_scores[key].sort(key=lambda row: -row[0])
+            for key in rouge2_scores.keys():
+                rouge2_scores[key].sort(key=lambda row: -row[0])
+            best_rouge1 = sum([score_list[0][0] for score_list in rouge1_scores.values()]) / cnt
+            best_rouge2 = sum([score_list[0][0] for score_list in rouge2_scores.values()]) / cnt
+            logging.info("Best ROUGE-1: {}".format(best_rouge1))
+            logging.info("Best ROUGE-2: {}".format(best_rouge2))
+
+            # Get top 3 ROUGE scores for each input
+            top3_rouge1 = sum([sum([score for score, _ in row[:3]]) / len(row[:3])
+                              for row in rouge1_scores.values()]) / cnt
+            top3_rouge2 = sum([sum([score for score, _ in row[:3]]) / len(row[:3])
+                              for row in rouge2_scores.values()]) / cnt
+            logging.debug("Example top 3 ROUGE-1 scores: {}".format(rouge1_scores[0][:3]))
+            logging.debug("Example top 3 ROUGE-2 scores: {}".format(rouge2_scores[0][:3]))
+            logging.info("Top 3 ROUGE-1: {}".format(top3_rouge1))
+            logging.info("Top 3 ROUGE-2: {}".format(top3_rouge2))
+        logging.debug("DONE EVALUATION")
 
 
 if __name__ == '__main__':
@@ -133,10 +136,9 @@ if __name__ == '__main__':
     parser.add_argument('--log', type=str, default=None,
                         help='Log filename')
 
-    parser.add_argument('--metrics', type=str, default='meteor',
+    parser.add_argument('--metrics', type=str,
+                        default=', '.join(available_metrics),
                         help='[{}]'.format(', '.join(available_metrics)))
-    parser.add_argument('--self-bleu-samples', type=int, default=None,
-                        help='Number of samples to measure self-bleu')
 
     parser.add_argument('--tag', type=str, default='',
                         help='Add a suffix of checkpoints')
@@ -146,7 +148,6 @@ if __name__ == '__main__':
                         help='Random seed')
     parser.add_argument('--toy', action='store_true')
     args = parser.parse_args()
-
 
     filename = args.generated.split('/')[-1].split('.')[0]
     filename = "evaluation_results_{}_{}".format(

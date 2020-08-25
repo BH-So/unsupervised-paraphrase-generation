@@ -1,4 +1,5 @@
 import argparse
+import csv
 import json
 import os
 from datetime import datetime
@@ -17,8 +18,11 @@ def inference(args):
     gpt_model = FinetuneGPT2(args)
     gpt_model.load_saved_model(args.checkpoint)
 
+    sentences = []
     with open(args.data_path) as f:
-        sentences = [line.strip() for line in f]
+        reader = csv.reader(f)
+        for corrupted, _ in reader:
+            sentences.append(corrupted)
 
     if args.toy is True:
         sentences = sentences[:4]
@@ -28,14 +32,18 @@ def inference(args):
         sentences,
         max_length=args.max_length,
         decoding=args.decoding,
-        suffix=''  # '[SEP]'
+        suffix='[SEP]'
     )
     logging.info("DONE INFERENCE")
     logging.info("Save to {}".format(args.save))
     os.makedirs(os.path.dirname(args.save), exist_ok=True)
     with open(args.save, 'w') as f:
-        for idx, sequence in enumerate(seq_list):
-            f.write('{}\t{}\n'.format(idx, sequence))
+        for idx, generated in enumerate(seq_list):
+            if isinstance(generated, list):
+                for seq in generated:
+                    f.write('{}\t{}\n'.format(idx, sequence))
+            else:
+                f.write('{}\t{}\n'.format(idx, generated))
 
 
 if __name__ == '__main__':
