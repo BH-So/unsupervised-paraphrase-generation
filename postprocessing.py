@@ -47,7 +47,7 @@ def candidate_filtering(args):
     with open(args.input) as f:
         inputs = [line.strip() for line in f]
     logging.info_("Read {} lines of model input: {}".format(
-            len(inputs), args.input))
+        len(inputs), args.input))
 
     with open(args.paraphrase) as f:
         paraphrase_lines = defaultdict(set)
@@ -162,7 +162,6 @@ if __name__ == '__main__':
     if args.log is None:
         args.log = './logs/{}.log'.format(filename)
     log_format = '%(asctime)s [%(levelname)s] %(message)s'
-    log_format = '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
     log_level = logging.DEBUG if args.debug else logging.INFO_
     log_level_utils = logging.DEBUG if args.debug else logging.INFO
     logging.basicConfig(level=log_level, format=log_format, filename=args.log)
