@@ -31,14 +31,10 @@ def evaluate(args):
     logging.debug("Example generated sentences: {}".format(sentences[0]))
     logging.debug("Read {} generated sentences".format(len(sentences)))
 
-    gt_sentences = []
-    if args.ground_truth is not None:
-        with open(args.ground_truth) as f:
-            reader = csv.reader(f)
-            for _, sent in reader:
-                gt_sentences.append(sent)
-        logging.debug("Example gt sentences: {}".format(gt_sentences[0]))
-        logging.debug("Read {} gt sentences".format(len(gt_sentences)))
+    with open(args.ground_truth) as f:
+        gt_sentences = [line.strip() for line in f]
+    logging.debug("Example gt sentences: {}".format(gt_sentences[0]))
+    logging.debug("Read {} gt sentences".format(len(gt_sentences)))
 
     if args.toy is True:
         gt_sentences = gt_sentences[:4]
@@ -128,7 +124,8 @@ if __name__ == '__main__':
     parser.add_argument('--generated', type=str,
                         default='./results/filtered/inferenced.txt',
                         help='Generated sentences (paraphrases)')
-    parser.add_argument('--ground_truth', type=str, default=None,
+    parser.add_argument('--ground_truth', type=str,
+                        default='./data/QQP_split/test_target.txt',
                         help='Ground turth paraphrases')
     parser.add_argument('--device', type=str, default='cuda')
     parser.add_argument('--save', type=str, default=None,

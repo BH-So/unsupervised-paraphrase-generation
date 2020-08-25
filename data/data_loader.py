@@ -1,4 +1,5 @@
 import csv
+import logging
 
 # import numpy as np
 import torch
@@ -8,16 +9,16 @@ from torch.utils.data.dataset import Dataset
 class QQPDataset(Dataset):
     def __init__(self, tokenizer, filename,
                  max_length=512, device='cuda',
-                 inference=False, is_toy=False):
+                 is_inference=False, load_augmented=False, is_toy=False):
         self.tokenizer = tokenizer
         self.filename = filename
         self.max_length = max_length
         self.device = device
-        self.inference = bool(inference)
+        self.is_inference = bool(is_inference)
         self.is_toy = is_toy
 
-        self.epoch = 0
-        self.load_dataset()
+        self.epoch = 1 if load_augmented is True else None
+        self.load_dataset(epoch=self.epoch)
 
     def __len__(self):
         return len(self.input_ids)
@@ -29,16 +30,17 @@ class QQPDataset(Dataset):
         samples = {
             'input_ids': input_ids,
         }
-        if self.inference is False:
+        if self.is_inference is False:
             samples['attention_mask'] = \
-                    self.attention_mask[idx, :].to(self.device)
-            samples['labels'] = self.labels[idx, :].to(self.device)
+                    self.attention_mask[idx, :] #.to(self.device)
+            samples['labels'] = self.labels[idx, :] #.to(self.device)
         return samples
 
     def load_dataset(self, epoch=None):
         filename = self.filename
         if epoch is not None:
             filename += '.{}'.format(epoch-1)
+        logging.info("Loading data from {}".format(filename))
 
         data = []
         with open(filename) as f:
@@ -62,7 +64,7 @@ class QQPDataset(Dataset):
         self.input_ids = encodings['input_ids']
         self.attention_mask = encodings['attention_mask']
 
-        if self.inference is False:
+        if self.is_inference is False:
             self.labels = torch.tensor(labels_list, dtype=torch.long)
 
     def formatting(self, input_text, target_text):
