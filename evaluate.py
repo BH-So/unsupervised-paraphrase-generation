@@ -137,7 +137,7 @@ if __name__ == '__main__':
                         help='Log filename')
 
     parser.add_argument('--metrics', type=str,
-                        default=', '.join(available_metrics),
+                        default=','.join(available_metrics),
                         help='[{}]'.format(', '.join(available_metrics)))
 
     parser.add_argument('--tag', type=str, default='',

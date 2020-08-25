@@ -115,6 +115,7 @@ def candidate_filtering(args):
                 best_paraphrase = scores[0][1]
                 logging.info_("Write the best: {}".format(best_paraphrase))
                 wf.write('{}\t{}\n'.format(idx, best_paraphrase))
+    logging.info_("Done postprocessing!")
 
 
 if __name__ == '__main__':
