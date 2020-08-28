@@ -3,6 +3,7 @@ TAG=$2
 LENGTH=$3  # 32
 BATCH_SIZE=$4 # 32
 LR=$5  # "1e-6"
+ACCUM=$6  # 4
 RANDOM_SEED=1234
 
 # TRAIN_DATA="./data/QQP_split/train_sample_preprocessed.txt"
@@ -17,9 +18,9 @@ CUDA_VISIBLE_DEVICES=${GPU_ID} python train_through_trainer.py \
     --max_length ${LENGTH} \
     --batch_size ${BATCH_SIZE} \
     --eval_batch_size ${BATCH_SIZE} \
-    --gradient_accumulation 4 \
+    --gradient_accumulation ${ACCUM} \
+    --num_epochs 8 \
+    --save_steps 237 \
     --learning_rate ${LR} \
-    --num_epochs 10 \
-    --save_steps 2000 \
     --tag ${TAG} \
     --seed ${RANDOM_SEED} #--toy --debug

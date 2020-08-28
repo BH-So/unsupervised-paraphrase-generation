@@ -41,7 +41,7 @@ def inference(args):
         for idx, generated in enumerate(seq_list):
             if isinstance(generated, list):
                 for seq in generated:
-                    f.write('{}\t{}\n'.format(idx, sequence))
+                    f.write('{}\t{}\n'.format(idx, seq))
             else:
                 f.write('{}\t{}\n'.format(idx, generated))
 
