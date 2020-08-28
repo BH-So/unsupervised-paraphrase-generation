@@ -1,20 +1,23 @@
 GPU_ID=$1
 TAG=$2
-LR=$3
-LENGTH=$4
-BATCH_SIZE=$5
+LENGTH=$3  # 64
+BATCH_SIZE=$4  # batch size per each GPU  # 32
+LR=$5  # "6.25e-5"
+ACCUM=$6  # 4
 RANDOM_SEED=1234
 
-TRAIN_DATA="./data/QQP_split/ver2/train_ver2_trunc${LENGTH}.txt"
-DEV_DATA="./data/QQP_split/ver2/dev_ver2_trunc${LENGTH}.txt"
+TRAIN_DATA="./data/QQP_split/train_preprocessed.txt"
+DEV_DATA="./data/QQP_split/dev_preprocessed.txt"
 
-CUDA_VISIBLE_DEVICES=${GPU_ID} python train.py \
+CUDA_VISIBLE_DEVICES=${GPU_ID} python train_through_trainer.py \
     --train_data_path ${TRAIN_DATA}\
     --dev_data_path ${DEV_DATA} \
     --max_length ${LENGTH} \
     --batch_size ${BATCH_SIZE} \
     --eval_batch_size ${BATCH_SIZE} \
+    --gradient_accumulation ${ACCUM} \
+    --num_epochs 8 \
+    --save_steps 237 \
     --learning_rate ${LR} \
-    --num_epochs 10 \
     --tag ${TAG} \
-    --seed ${RANDOM_SEED} # --toy
+    --seed ${RANDOM_SEED} #--debug --toy

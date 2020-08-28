@@ -8,7 +8,7 @@ import logging
 
 import numpy as np
 import torch
-from model.gpt2_finetune_model import FinetuneGPT2
+from model.gpt2_trainer import FinetuneGPT2
 
 
 start_datetime = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
@@ -16,7 +16,7 @@ start_datetime = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
 
 def inference(args):
     gpt_model = FinetuneGPT2(args)
-    gpt_model.load_saved_model(args.checkpoint)
+    gpt_model.build_model(args.checkpoint, with_tokenizer=False)
 
     sentences = []
     with open(args.data_path) as f:
@@ -53,6 +53,8 @@ if __name__ == '__main__':
                         help='Dataset file to paraphrase')
     parser.add_argument('--checkpoint', type=str,
                         help='Path to LOAD model checkpoint')
+    parser.add_argument('--model', type=str, default='gpt2-medium',
+                        help='pretrained model name (to load tokenizer)')
     parser.add_argument('--device', type=str, default='cuda')
     parser.add_argument('--save', type=str, default=None,
                         help='File name to save generated sentences')
