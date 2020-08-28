@@ -9,7 +9,7 @@ from torch.utils.data.dataset import Dataset
 class QQPDataset(Dataset):
     def __init__(self, tokenizer, filename,
                  max_length=512, device='cuda',
-                 is_inference=False, load_augmented=False, is_toy=False):
+                 is_inference=False, load_noise_data=False, is_toy=False):
         self.tokenizer = tokenizer
         self.filename = filename
         self.max_length = max_length
@@ -17,8 +17,7 @@ class QQPDataset(Dataset):
         self.is_inference = bool(is_inference)
         self.is_toy = is_toy
 
-        self.epoch = 1 if load_augmented is True else None
-        self.load_dataset(epoch=self.epoch)
+        self.load_dataset(noised=load_noise_data)
 
     def __len__(self):
         return len(self.input_ids)
@@ -36,10 +35,10 @@ class QQPDataset(Dataset):
             samples['labels'] = self.labels[idx, :]
         return samples
 
-    def load_dataset(self, epoch=None):
+    def load_dataset(self, noised=False):
         filename = self.filename
-        if epoch is not None:
-            filename += '.{}'.format(epoch-1)
+        if noised is True:
+            filename += '.0'
         logging.info("Loading data from {}".format(filename))
 
         data = []

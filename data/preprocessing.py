@@ -66,9 +66,8 @@ def data_preparation(args):
         for corrupted, sentence in data:
             writer.writerow([corrupted, sentence])
 
-    for i in range(args.num_generate):
-        filename = args.corrupted_output.format(i)
-        with open(filename, 'w') as wf:
+    if args.save_noised_output is True:
+        with open(args.noised_output, 'w') as wf:
             writer = csv.writer(wf)
             for corrupted, sentence in data:
                 corrupted = sentence_noising(corrupted)
@@ -81,18 +80,20 @@ if __name__ == '__main__':
                         help='input file')
     parser.add_argument('--output', type=str, required=True,
                         help='output sentence after removing stop words')
-    parser.add_argument('--corrupted_output', type=str, default=None,
-                        help='output sentences after all corruptions')
+
+    parser.add_argument('--save_noised_output', action="store_true",
+                        help='add noise: synonym replacement and shuffling')
+    parser.add_argument('--noised_output', type=str, default=None,
+                        help='output sentences with additional noise')
 
     parser.add_argument('--max_length', type=int, default=1024)
-    parser.add_argument('--num_generate', type=int, default=0)
     parser.add_argument('--seed', type=int, default=1234)
 
     args = parser.parse_args()
 
     random.seed(args.seed)
 
-    if args.corrupted_output is None:
-        args.corrupted_output = args.output + '.{}'
+    if args.noised_output is None:
+        args.noised_output = args.output + '.0'
 
     data_preparation(args)

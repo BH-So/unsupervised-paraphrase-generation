@@ -18,75 +18,27 @@ class FinetuneGPT2(object):
         self.model = self.tokenizer = None
         self.global_step = None
 
-    def build_model(self):
-        model_name = self.args.model
-        if self.tokenizer is None and self.model is None:
-            self.tokenizer = GPT2Tokenizer.from_pretrained(model_name)
-            self.model = GPT2LMHeadModel.from_pretrained(model_name)
-            logging.info("Load {} model".format(model_name))
+    def build_model(self, checkpoint_dir=None, with_tokenizer=True):
+        if checkpoint_dir is None or with_tokenizer is False:
+            self.tokenizer = GPT2Tokenizer.from_pretrained(self.args.model)
+            self.tokenizer.add_special_tokens(self.special_tokens_dict)
+            self.tokenizer.pad_token = self.tokenizer.eos_token
+        else:
+            self.tokenizer = GPT2Tokenizer.from_pretrained(checkpoint_dir)
 
-        self.tokenizer.add_special_tokens(self.special_tokens_dict)
-        self.tokenizer.pad_token = self.tokenizer.eos_token
-        self.model.resize_token_embeddings(len(self.tokenizer))
+        if checkpoint_dir is None:
+            self.model = GPT2LMHeadModel.from_pretrained(self.args.model)
+            self.model.resize_token_embeddings(len(self.tokenizer))
+            logging.info("Load {} model".format(self.args.model))
+        else:
+            self.model = GPT2LMHeadModel.from_pretrained(checkpoint_dir)
+            logging.info("Load model from {}".format(checkpoint_dir))
         self.model.to(self.device)
         self.model.train()
 
         self.global_step = 0
-        self.writer = SummaryWriter(self.args.summary_dir)
-
-    def build_optimizer(self, dataset_size=None):
-        lr = self.args.learning_rate
-        self.optimizer = AdamW(self.model.parameters(), lr=lr,
-                               weight_decay=0.01)
-
-        if dataset_size is None:
-            dataset_size = 400000
-        num_train_steps = math.ceil(
-            dataset_size * self.args.num_epochs / self.args.batch_size)
-        num_warmup_steps = round(num_train_steps * self.args.warmup_ratio)
-        self.scheduler = get_linear_schedule_with_warmup(
-            self.optimizer, num_warmup_steps, num_train_steps)
-
-        logging.info('num_train_steps : {}'.format(num_train_steps))
-        logging.info('num_warmup_steps: {}'.format(num_warmup_steps))
-        logging.info('Optimizer {}: {}'.format(
-            self.optimizer.__class__.__name__, self.optimizer.state_dict()))
-        logging.info('Scheduler {}: {}'.format(
-            self.scheduler.__class__.__name__, self.scheduler.state_dict()))
-
-    def train(self, samples):
-        self.model.train()
-        logging.debug(samples)
-        outputs = self.model(**samples)
-        loss = outputs[0]
-        loss.backward()
-        self.optimizer.step()
-        self.scheduler.step()
-
-        loss = loss.item()
-        self.global_step += 1
-        self.writer.add_scalar('Loss/train', loss, self.global_step)
-
-        return loss
-
-    def get_loss(self, dataset, batch_size=None):
-        if batch_size is None:
-            batch_size = self.args.eval_batch_size
-        self.model.eval()
-        with torch.no_grad():
-            losses = []
-            for begin_loc in range(0, len(dataset), batch_size):
-                end_loc = begin_loc + batch_size
-                samples = dataset[begin_loc:end_loc]
-                outputs = self.model(**samples)
-                loss = outputs[0] * samples['input_ids'].size(0)
-                losses.append(loss)
-            avg_loss = torch.stack(losses).sum() / len(dataset)
-            ppl = torch.exp(avg_loss).item()
-
-        logging.info("dev PPL = {}".format(ppl))
-        self.writer.add_scalar('Loss/dev_ppl', ppl, self.global_step)
-        return ppl
+        if hasattr(self.args, 'summary_dir'):
+            self.writer = SummaryWriter(self.args.summary_dir)
 
     def generate_text(self, input_texts, max_length=1024, decoding='greedy',
                       suffix=''):
@@ -115,18 +67,3 @@ class FinetuneGPT2(object):
                     sequences.append(sequence)
                 sentences_list.append(sequences)
         return sentences_list
-
-    def load_saved_model(self, checkpoint_dir=None):
-        if checkpoint_dir is None:
-            checkpoint_dir = self.args.checkpoint
-        self.tokenizer = GPT2Tokenizer.from_pretrained(checkpoint_dir)
-        self.model = GPT2LMHeadModel.from_pretrained(checkpoint_dir).to(self.device)
-        logging.info("Load model from {}".format(checkpoint_dir))
-
-    def save_model(self, save_dir=None):
-        if save_dir is None:
-            save_dir = self.args.save_dir
-        os.makedirs(save_dir, exist_ok=True)
-        self.model.save_pretrained(save_dir)
-        self.tokenizer.save_pretrained(save_dir)
-        logging.info("Save model at {}".format(save_dir))

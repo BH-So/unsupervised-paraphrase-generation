@@ -70,7 +70,7 @@ dependencies:
   - packaging=20.4=pyh9f0ad1d_0
   - perl=5.26.2=h516909a_1006
   - pillow=7.2.0=py38hb39fc2d_0
-  - pip=20.1.1=py38_1
+  - pip=20.2.2=py38_0
   - protobuf=3.12.3=py38h950e882_0
   - pyasn1=0.4.8=py_0
   - pyasn1-modules=0.2.7=py_0
@@ -118,24 +118,12 @@ dependencies:
   - zlib=1.2.11=h7b6447c_3
   - zstd=1.4.5=h9ceee32_0
   - pip:
-    - boto==2.49.0
-    - boto3==1.14.42
-    - botocore==1.17.42
-    - docutils==0.15.2
-    - fast-bleu==0.0.85
+    - fast-bleu==0.0.86
     - future==0.18.2
-    - gensim==3.8.3
-    - jmespath==0.10.0
-    - nlg-eval==2.3
-    - psutil==5.7.2
     - rouge-score==0.0.4
-    - s3transfer==0.3.3
     - scikit-learn==0.23.2
-    - sentence-transformers==0.3.3
-    - smart-open==2.1.0
-    - theano==1.0.5
+    - sentence-transformers==0.3.4
     - threadpoolctl==2.1.0
     - tokenizers==0.8.1rc1
-    - xdg==4.0.1
 prefix: /home/bhso/anaconda3/envs/huggingface
 

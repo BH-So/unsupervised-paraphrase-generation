@@ -1,4 +1,5 @@
 import csv
+import os
 import random
 
 # Read file
@@ -15,6 +16,7 @@ dev_num = 60000
 unlabeled_used = 300000
 
 random.seed(1234)
+os.mkdir("QQP_split")
 
 
 def data_cleansing(text):
@@ -68,6 +70,7 @@ if __name__ == '__main__':
     # Converting set to list could be shuffled the order,
     # but we want the same result with the same random seed
     training_questions.sort()
+
     random.shuffle(training_questions)
     with open(dev_file, 'w') as f:
         for question in training_questions[:dev_num]:

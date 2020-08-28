@@ -8,7 +8,7 @@ import numpy as np
 import torch
 from transformers import Trainer, TrainingArguments
 
-from model.gpt2_trainer import FinetuneGPT2
+from model.gpt2_finetune_model import FinetuneGPT2
 from data.data_loader import QQPDataset
 
 
@@ -24,7 +24,7 @@ def train(args):
 
     train_dataset = QQPDataset(gpt_model.tokenizer, args.train_data_path,
                                max_length=args.max_length,
-                               load_augmented=True,
+                               load_noise_data=True,
                                device=device, is_toy=args.toy)
     dev_dataset = QQPDataset(gpt_model.tokenizer, args.dev_data_path,
                              max_length=args.max_length,
@@ -59,7 +59,6 @@ def train(args):
         tb_writer=gpt_model.writer,
         prediction_loss_only=True,
     )
-    # optimizers=(gpt_model.optimizer, gpt_model.scheduler),
 
     trainer.train()
     trainer.save_model()

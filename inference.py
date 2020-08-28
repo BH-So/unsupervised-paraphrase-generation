@@ -65,7 +65,7 @@ if __name__ == '__main__':
                         help='Maximum number of tokens for each sequence')
 
     parser.add_argument('--decoding', type=str, default='sampling',
-                        help='{beam, greedy, sampling}')
+                        help='{greedy, sampling, beam}')
     parser.add_argument('--beam_size', type=int, default=8,
                         help='Beam size for beam search decoding')
     parser.add_argument('--k', type=int, default=0,
