@@ -80,9 +80,9 @@ if __name__ == '__main__':
     parser.add_argument('--input', type=str, required=True,
                         help='input file')
     parser.add_argument('--output', type=str, required=True,
-                         help='output sentence after removing stop words')
+                        help='output sentence after removing stop words')
     parser.add_argument('--corrupted_output', type=str, default=None,
-                         help='output sentences after all corruptions')
+                        help='output sentences after all corruptions')
 
     parser.add_argument('--max_length', type=int, default=1024)
     parser.add_argument('--num_generate', type=int, default=0)

@@ -57,7 +57,6 @@ def train(args):
             _ = gpt_model.train(samples)
 
             if step % 20000 == 0 or step == last_step:
-            #        and (args.toy is False or ep % 200 == 0):
                 if step < last_step:
                     logging.info("{} step of {} epoch".format(step, ep))
                     checkpoint = 'ep{}_{}k_steps/'.format(ep, step // 1000)

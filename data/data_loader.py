@@ -32,8 +32,8 @@ class QQPDataset(Dataset):
         }
         if self.is_inference is False:
             samples['attention_mask'] = \
-                    self.attention_mask[idx, :] #.to(self.device)
-            samples['labels'] = self.labels[idx, :] #.to(self.device)
+                    self.attention_mask[idx, :]
+            samples['labels'] = self.labels[idx, :]
         return samples
 
     def load_dataset(self, epoch=None):

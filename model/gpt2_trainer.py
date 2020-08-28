@@ -19,24 +19,27 @@ class FinetuneGPT2(object):
         self.model = self.tokenizer = None
         self.global_step = None
 
-    def build_model(self, checkpoint_dir=None):
-        if checkpoint_dir is None:
+    def build_model(self, checkpoint_dir=None, with_tokenizer=True):
+        if checkpoint_dir is None or with_tokenizer is False:
             self.tokenizer = GPT2Tokenizer.from_pretrained(self.args.model)
-            self.model = GPT2LMHeadModel.from_pretrained(self.args.model)
-            logging.info("Load {} model".format(self.args.model))
-
             self.tokenizer.add_special_tokens(self.special_tokens_dict)
             self.tokenizer.pad_token = self.tokenizer.eos_token
-            self.model.resize_token_embeddings(len(self.tokenizer))
         else:
             self.tokenizer = GPT2Tokenizer.from_pretrained(checkpoint_dir)
+
+        if checkpoint_dir is None:
+            self.model = GPT2LMHeadModel.from_pretrained(self.args.model)
+            self.model.resize_token_embeddings(len(self.tokenizer))
+            logging.info("Load {} model".format(self.args.model))
+        else:
             self.model = GPT2LMHeadModel.from_pretrained(checkpoint_dir)
             logging.info("Load model from {}".format(checkpoint_dir))
         self.model.to(self.device)
         self.model.train()
 
         self.global_step = 0
-        self.writer = SummaryWriter(self.args.summary_dir)
+        if hasattr(self.args, 'summary_dir'):
+            self.writer = SummaryWriter(self.args.summary_dir)
 
     def build_optimizer(self, dataset_size=400000):
         lr = self.args.learning_rate

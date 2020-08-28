@@ -30,7 +30,7 @@ def train(args):
                              max_length=args.max_length,
                              device=device, is_toy=args.toy)
 
-    gpt_model.build_optimizer(dataset_size=len(train_dataset))
+    # gpt_model.build_optimizer(dataset_size=len(train_dataset))
 
     # sep_tok = gpt_model.tokenizer.sep_token
     # dev_samples = [gpt_model.tokenizer.decode(ids).split(sep_tok)[0]
@@ -50,14 +50,14 @@ def train(args):
         per_device_eval_batch_size=args.eval_batch_size,
         gradient_accumulation_steps=args.gradient_accumulation,
         learning_rate=args.learning_rate,
+        warmup_steps=300,  # warmup_steps=gpt_model.num_warmup_steps,
+        weight_decay=0.01,
         evaluate_during_training=True,
         save_steps=args.save_steps,
         eval_steps=args.save_steps,
         seed=args.seed,
         logging_dir='./logs',
     )
-    # warmup_steps=gpt_model.num_warmup_steps,
-    # weight_decay=0.01,
 
     trainer = Trainer(
         model=gpt_model.model,
@@ -65,9 +65,9 @@ def train(args):
         train_dataset=train_dataset,
         eval_dataset=dev_dataset,
         tb_writer=gpt_model.writer,
-        optimizers=(gpt_model.optimizer, gpt_model.scheduler),
         prediction_loss_only=True,
     )
+    # optimizers=(gpt_model.optimizer, gpt_model.scheduler),
 
     trainer.train()
     trainer.save_model()
@@ -176,13 +176,10 @@ if __name__ == '__main__':
                         filename=log_file.format(datetime=start_datetime))
     logging.getLogger().setLevel(log_level)
 
-    ### Reproducibility
+    # Reproducibility
     random.seed(args.seed)
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
-    ### Deterministic option may have a negative performance impact
-    # torch.backends.cudnn.deterministic = True
-    # torch.backends.cudnn.benchmark = False
 
     if args.toy:
         args.train_data_path = args.dev_data_path

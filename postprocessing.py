@@ -39,7 +39,6 @@ def filter_special_tokens(args, sent):
 
 
 def candidate_filtering(args):
-    max_length = args.max_length
     sep_token = args.sep_token
     min_diff = args.min_diff
     threshold = args.threshold
@@ -80,7 +79,7 @@ def candidate_filtering(args):
             for paraphrase in paraphrase_lines[idx]:
                 cnt += 1
                 logging.info_("Count={}, Index={}:\n\tInput:\t{}\n\tGen:\t{}".format(
-                        cnt, idx, inputs[idx], paraphrase))
+                    cnt, idx, inputs[idx], paraphrase))
 
                 # Cosine similarity of embeddings using Sentence-BERT
                 embedding = embedder.encode(paraphrase)[0]
@@ -107,9 +106,10 @@ def candidate_filtering(args):
                     wf.write('{}\t{}\n'.format(idx, paraphrase))
             if args.best_only is True:
                 if len(scores) == 0:
-                    logging.warning("There is no paraphrase which is similar enough")
+                    logging.warning(
+                        "There is no paraphrase which is similar enough")
                     continue
-                scores = [[100*(dist>=min_diff)+sim, text]
+                scores = [[100 * (dist >= min_diff) + sim, text]
                           for sim, dist, text in scores]
                 scores.sort(key=lambda row: row[0], reverse=True)
                 best_paraphrase = scores[0][1]
@@ -135,7 +135,8 @@ if __name__ == '__main__':
     parser.add_argument('--min_diff', type=int, default=6,
                         help='Minimum (character-level) Levenshtein distance')
     parser.add_argument('--best_only', action='store_true',
-                        help='Remain the best cosine similarity (>= threshold)')
+                        help='Remain the one with the best cosine \
+                              similarity (>= threshold)')
 
     parser.add_argument('--model', type=str,
                         default='bert-base-nli-stsb-mean-tokens',
@@ -150,7 +151,6 @@ if __name__ == '__main__':
     parser.add_argument('--debug', action='store_true')
     parser.add_argument('--toy', action='store_true')
     args = parser.parse_args()
-
 
     filename = os.path.basename(args.paraphrase).split('.')[0]
     filename = 'postprocess_{}'.format(filename)
