@@ -73,41 +73,6 @@ def train(args):
     trainer.save_model()
 
     trainer.evaluate()
-    # for ep in range(1, args.num_epochs+1):
-    #     train_dataset.load_dataset(epoch=ep)
-    #     step = 0
-    #     indices = list(range(len(train_dataset)))
-    #     random.shuffle(indices)
-    #     for begin_loc in tqdm(range(0, len(train_dataset), batch_size)):
-    #         step += 1
-    #         end_loc = begin_loc + batch_size
-    #         samples = train_dataset[indices[begin_loc:end_loc]]
-    #         _ = gpt_model.train(samples)
-
-    #         if step % 20000 == 0 or step == last_step:
-    #         #        and (args.toy is False or ep % 200 == 0):
-    #             if step < last_step:
-    #                 logging.info("{} step of {} epoch".format(step, ep))
-    #                 checkpoint = 'ep{}_{}k_steps/'.format(ep, step // 1000)
-    #             else:
-    #                 logging.info("End of {} epoch".format(ep))
-    #                 checkpoint = 'ep{}/'.format(ep)
-    #             if args.toy is False:
-    #                 gpt_model.save_model(args.save_dir + checkpoint)
-    #             ppl = gpt_model.get_loss(dev_dataset)
-    #             print("Dev ppl: {}".format(ppl))
-    #             print("Sample generation on train data")
-    #             generated_texts = gpt_model.generate_text(
-    #                     train_samples, suffix=sep_tok)
-    #             for inp, gen in zip(train_samples, generated_texts):
-    #                 print("  Input: {}".format(inp))
-    #                 print("  Gen: {}".format(gen))
-    #             print("Sample generation on dev data")
-    #             generated_texts = gpt_model.generate_text(
-    #                     dev_samples, suffix=sep_tok)
-    #             for inp, gen in zip(dev_samples, generated_texts):
-    #                 print("  Input: {}".format(inp))
-    #                 print("  Gen: {}".format(gen))
 
 
 if __name__ == '__main__':
@@ -139,7 +104,7 @@ if __name__ == '__main__':
     parser.add_argument('--eval_batch_size', type=int, default=4,
                         help='Evaluation batch size')
     parser.add_argument('--gradient_accumulation', type=int, default=1,
-                        help='Number of updates steps to accumulate the gradients')
+                        help='Number of update steps to accumulate the gradients')
     parser.add_argument('--learning_rate', type=float, default=6.25e-5,
                         help='Learning rate of fine-tuning')
     parser.add_argument('--num_epochs', type=int, default=5,
